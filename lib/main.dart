@@ -54,7 +54,7 @@ class LinguaLeapApp extends StatelessWidget {
           centerTitle: false,
           elevation: 0,
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 1.5,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -69,7 +69,7 @@ class LinguaLeapApp extends StatelessWidget {
           centerTitle: false,
           elevation: 0,
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 2,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
