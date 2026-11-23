@@ -23,6 +23,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   final List<Map<String, String>> _presets = [
     {
+      'name': 'Coarena',
+      'url': 'https://coarena.ai/api/v1',
+      'model': 'gpt-6-luna',
+    },
+    {
       'name': 'OpenAI',
       'url': 'https://api.openai.com/v1',
       'model': 'gpt-4o-mini',
@@ -156,7 +161,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: (val) => settings.updateApiKey(val),
             decoration: InputDecoration(
               labelText: 'API Ключ (Bearer Token)',
-              hintText: 'sk-...',
+              hintText: 'API key провайдера (например, coa-...)',
               prefixIcon: const Icon(Icons.key),
               suffixIcon: IconButton(
                 icon: Icon(_obscureApiKey ? Icons.visibility : Icons.visibility_off),
@@ -173,7 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: (val) => settings.updateBaseUrl(val),
             decoration: const InputDecoration(
               labelText: 'Base URL провайдера',
-              hintText: 'https://api.openai.com/v1',
+              hintText: 'https://coarena.ai/api/v1',
               prefixIcon: const Icon(Icons.cloud_outlined),
               border: const OutlineInputBorder(),
             ),
@@ -186,7 +191,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: (val) => settings.updateModel(val),
             decoration: const InputDecoration(
               labelText: 'Модель нейросети',
-              hintText: 'gpt-4o-mini, deepseek-chat, llama-3.1-8b-instant...',
+              hintText: 'gpt-6-luna или ID с coarena.ai/api/v1/models',
               prefixIcon: const Icon(Icons.smart_toy_outlined),
               border: const OutlineInputBorder(),
             ),

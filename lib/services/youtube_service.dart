@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import '../models/material_item.dart';
 import '../models/segment.dart';
@@ -19,6 +20,12 @@ class YouTubeImportResult {
 
 class YouTubeService {
   final YoutubeExplode _yt = YoutubeExplode();
+  final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 5),
+      receiveTimeout: const Duration(seconds: 5),
+    ),
+  );
 
   /// Extract video ID from diverse URL formats or bare IDs
   static String? extractVideoId(String input) {
@@ -75,11 +82,9 @@ class YouTubeService {
       throw Exception('Invalid YouTube URL or Video ID');
     }
 
-    // 1. Fetch metadata
-    final video = await _yt.videos.get(videoId);
-    final title = video.title;
-
-    // 2. Fetch caption manifest
+    // Fetch captions first. The package's metadata API parses YouTube's watch
+    // page, which can incorrectly report public videos as unavailable. Captions
+    // are fetched through YouTube's Android API in youtube_explode_dart 3.x.
     final manifest = await _yt.videos.closedCaptions.getManifest(videoId);
     if (manifest.tracks.isEmpty) {
       throw Exception('No subtitles/closed captions found for this video.');
@@ -133,7 +138,7 @@ class YouTubeService {
     // Fallback: take first available
     selectedTrack ??= manifest.tracks.first;
 
-    // 4. Download and parse captions
+    // Download and parse captions
     final captionTrack = await _yt.videos.closedCaptions.get(selectedTrack);
     final segments = <Segment>[];
 
@@ -154,12 +159,33 @@ class YouTubeService {
       throw Exception('Caption track was empty.');
     }
 
+    final title = await _fetchVideoTitle(videoId);
+
     return YouTubeImportResult(
       videoId: videoId,
       title: title,
       segments: segments,
       selectedLanguage: selectedTrack.language.name,
     );
+  }
+
+  Future<String> _fetchVideoTitle(String videoId) async {
+    // oEmbed is only used for display metadata; importing captions must still
+    // work if this optional request is blocked or unavailable.
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        'https://www.youtube.com/oembed',
+        queryParameters: {
+          'url': 'https://www.youtube.com/watch?v=$videoId',
+          'format': 'json',
+        },
+      );
+      final title = response.data?['title'];
+      if (title is String && title.trim().isNotEmpty) return title.trim();
+    } catch (_) {
+      // Keep the import usable even when oEmbed is unavailable.
+    }
+    return 'YouTube video ($videoId)';
   }
 
   /// Helper to convert result into MaterialItem
@@ -180,5 +206,6 @@ class YouTubeService {
 
   void dispose() {
     _yt.close();
+    _dio.close(force: true);
   }
 }
